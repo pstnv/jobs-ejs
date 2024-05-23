@@ -12,6 +12,10 @@ app.use(express.json());
 // cookies
 const cookieParser = require("cookie-parser");
 app.use(cookieParser(process.env.SESSION_SECRET));
+// extra security packages
+const rateLimiter = require("express-rate-limit");
+const helmet = require("helmet");
+const xss = require("xss-clean");
 
 const session = require("express-session");
 const MongoDBStore = require("connect-mongodb-session")(session);
@@ -64,6 +68,16 @@ const csrf_options = {
 };
 const csrf_middleware = csrf(csrf_options); //initialize and return middlware
 app.use(csrf_middleware);
+
+// security
+app.use(
+    rateLimiter({
+        windowMs: 15 * 60 * 1000, // 15 minutes
+        max: 100, // limit each IP to 100 requests per windowMs
+    })
+);
+app.use(helmet());
+app.use(xss());
 
 // flash messages
 app.use(require("connect-flash")());
