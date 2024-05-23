@@ -52,7 +52,7 @@ app.use(session(sessionParms));
 
 // passport
 const passport = require("passport");
-const passportInit = require("./passport/passportInit");
+const passportInit = require("./passport/passportInit.js");
 
 passportInit();
 app.use(passport.initialize());
@@ -85,12 +85,22 @@ app.use(require("./middleware/storeLocals.js"));
 app.get("/", (req, res) => {
     res.render("index");
 });
-app.use("/sessions", require("./routes/sessionRoutes"));
+app.use("/sessions", require("./routes/sessionRoutes.js"));
 
 // secret word handling
-const secretWordRouter = require("./routes/secretWord");
+const secretWordRouter = require("./routes/secretWord.js");
 // authentication middleware
-const auth = require("./middleware/auth");
+const auth = require("./middleware/auth.js");
+// multiply API
+app.get("/multiply", (req, res) => {
+    const result = req.query.first * req.query.second;
+    if (result.isNaN) {
+        result = "NaN";
+    } else if (result == null) {
+        result = "null";
+    }
+    res.json({ result: result });
+});
 // jobs route
 const jobs = require("./routes/jobs.js");
 app.use("/secretWord", auth, secretWordRouter);
@@ -104,20 +114,35 @@ app.use((err, req, res, next) => {
     res.status(500).send("Something went wrong. Try again later...");
 });
 
-const port = process.env.PORT || 5000;
-const start = async () => {
+const port = process.env.PORT || 3000;
+// const start = async () => {
+//     try {
+//         let mongoURL = process.env.MONGO_URI;
+//         if (process.env.NODE_ENV == "test") {
+//             mongoURL = process.env.MONGO_URI_TEST;
+//         }
+//         await require("./db/connect")(mongoURL);
+//         app.listen(port, () => {
+//             console.log(`Server is listening on port ${port}...`);
+//         });
+//     } catch (error) {
+//         console.log(error);
+//     }
+// };
+// start();
+
+// for testing
+const start = () => {
     try {
-        let mongoURL = process.env.MONGO_URI;
-        if (process.env.NODE_ENV == "test") {
-            mongoURL = process.env.MONGO_URI_TEST;
-        }
-        await require("./db/connect")(mongoURL);
-        app.listen(port, () => {
-            console.log(`Server is listening on port ${port}...`);
-        });
+        require("./db/connect.js")(process.env.MONGO_URI_TEST);
+        return app.listen(port, () =>
+            console.log(`Server is listening on port ${port}...`)
+        );
     } catch (error) {
         console.log(error);
     }
 };
 
-start();
+const server = start();
+
+module.exports = { app, server };
