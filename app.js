@@ -8,7 +8,8 @@ const app = express();
 // middleware
 app.set("view engine", "ejs");
 app.use(require("body-parser").urlencoded({ extended: true }));
-// cookie
+app.use(express.json());
+// cookies
 const cookieParser = require("cookie-parser");
 app.use(cookieParser(process.env.SESSION_SECRET));
 
@@ -32,8 +33,6 @@ const sessionParms = {
     store: store,
     cookie: { secure: false, sameSite: "strict" },
 };
-
-
 
 // csrf
 const csrf = require("host-csrf");
@@ -78,14 +77,17 @@ app.use("/sessions", require("./routes/sessionRoutes"));
 const secretWordRouter = require("./routes/secretWord");
 // authentication middleware
 const auth = require("./middleware/auth");
+// jobs route
+const jobs = require("./routes/jobs.js");
 app.use("/secretWord", auth, secretWordRouter);
+app.use("/jobs", auth, jobs);
 
 app.use((req, res) => {
     res.status(404).send(`That page ${req.url} was not found.`);
 });
 app.use((err, req, res, next) => {
-    res.status(500).send(err.message);
     console.log(err);
+    res.status(500).send("Something went wrong. Try again later...");
 });
 
 const port = process.env.PORT || 5000;
