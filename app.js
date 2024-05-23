@@ -91,6 +91,15 @@ app.use("/sessions", require("./routes/sessionRoutes.js"));
 const secretWordRouter = require("./routes/secretWord.js");
 // authentication middleware
 const auth = require("./middleware/auth.js");
+//
+app.use((req, res, next) => {
+    if (req.path == "/multiply") {
+        res.set("Content-Type", "application/json");
+    } else {
+        res.set("Content-Type", "text/html");
+    }
+    next();
+});
 // multiply API
 app.get("/multiply", (req, res) => {
     const result = req.query.first * req.query.second;
