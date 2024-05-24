@@ -1,4 +1,5 @@
 require("dotenv").config();
+const { StatusCodes} = require("http-status-codes")
 
 const express = require("express");
 require("express-async-errors");
@@ -120,7 +121,7 @@ app.use((req, res) => {
 });
 app.use((err, req, res, next) => {
     console.log(err);
-    res.status(500).send("Something went wrong. Try again later...");
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).send("Something went wrong. Try again later...");
 });
 
 const port = process.env.PORT || 3000;
