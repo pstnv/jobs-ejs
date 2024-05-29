@@ -1,5 +1,5 @@
 require("dotenv").config();
-const { StatusCodes} = require("http-status-codes")
+const { StatusCodes } = require("http-status-codes");
 
 const express = require("express");
 require("express-async-errors");
@@ -20,18 +20,22 @@ const xss = require("xss-clean");
 
 const session = require("express-session");
 const MongoDBStore = require("connect-mongodb-session")(session);
-const url = process.env.MONGO_URI;
+
+let mongoURL = process.env.MONGO_URI;
+if (process.env.NODE_ENV == "test") {
+    mongoURL = process.env.MONGO_URI_TEST;
+}
 
 const store = new MongoDBStore({
     // may throw an error, which won't be caught
-    uri: url,
+    uri: mongoURL,
     collection: "mySessions",
 });
 store.on("error", function (error) {
     console.log(error);
 });
 
-const sessionParms = {
+const sessionParams = {
     secret: process.env.SESSION_SECRET,
     resave: true,
     saveUninitialized: true,
@@ -45,11 +49,11 @@ let csrf_development_mode = true;
 
 if (app.get("env") === "production") {
     app.set("trust proxy", 1); // trust first proxy
-    sessionParms.cookie.secure = true; // serve secure cookies
+    sessionParams.cookie.secure = true; // serve secure cookies
     csrf_development_mode = false;
 }
 
-app.use(session(sessionParms));
+app.use(session(sessionParams));
 
 // passport
 const passport = require("passport");
@@ -62,10 +66,10 @@ app.use(passport.session());
 // csrf
 const csrf_options = {
     protected_operations: ["POST"],
-    protected_content_types: ["application/json"],
+    // protected_content_types: ["application/json"],
     development_mode: csrf_development_mode,
     //
-    cookieName: "csrf_cookie",
+    // cookieName: "csrf_cookie",
 };
 const csrf_middleware = csrf(csrf_options); //initialize and return middlware
 app.use(csrf_middleware);
@@ -86,13 +90,12 @@ app.use(require("./middleware/storeLocals.js"));
 app.get("/", (req, res) => {
     res.render("index");
 });
-app.use("/sessions", require("./routes/sessionRoutes.js"));
 
 // secret word handling
 const secretWordRouter = require("./routes/secretWord.js");
 // authentication middleware
 const auth = require("./middleware/auth.js");
-//
+// multiply middleware
 app.use((req, res, next) => {
     if (req.path == "/multiply") {
         res.set("Content-Type", "application/json");
@@ -101,7 +104,8 @@ app.use((req, res, next) => {
     }
     next();
 });
-// multiply API
+// routes
+// multiply API route
 app.get("/multiply", (req, res) => {
     const result = req.query.first * req.query.second;
     if (result.isNaN) {
@@ -111,40 +115,29 @@ app.get("/multiply", (req, res) => {
     }
     res.json({ result: result });
 });
-// jobs route
-const jobs = require("./routes/jobs.js");
+// session route
+const sessionRouter = require("./routes/sessionRoutes.js");
+app.use("/session", sessionRouter);
 app.use("/secretWord", auth, secretWordRouter);
-app.use("/jobs", auth, jobs);
+// jobs router
+const jobsRouter = require("./routes/jobs.js");
+app.use("/jobs", auth, jobsRouter);
 
 app.use((req, res) => {
     res.status(404).send(`That page ${req.url} was not found.`);
 });
 app.use((err, req, res, next) => {
     console.log(err);
-    res.status(StatusCodes.INTERNAL_SERVER_ERROR).send("Something went wrong. Try again later...");
+    res.status(500).send(err.message);
+    // res.status(StatusCodes.INTERNAL_SERVER_ERROR).send(
+    //     "Something went wrong. Try again later..."
+    // );
 });
 
 const port = process.env.PORT || 3000;
-// const start = async () => {
-//     try {
-//         let mongoURL = process.env.MONGO_URI;
-//         if (process.env.NODE_ENV == "test") {
-//             mongoURL = process.env.MONGO_URI_TEST;
-//         }
-//         await require("./db/connect")(mongoURL);
-//         app.listen(port, () => {
-//             console.log(`Server is listening on port ${port}...`);
-//         });
-//     } catch (error) {
-//         console.log(error);
-//     }
-// };
-// start();
-
-// for testing
 const start = () => {
     try {
-        require("./db/connect.js")(process.env.MONGO_URI_TEST);
+        require("./db/connect.js")(mongoURL);
         return app.listen(port, () =>
             console.log(`Server is listening on port ${port}...`)
         );

@@ -16,7 +16,7 @@ const createJob = async (req, res) => {
     const { _id: createdBy } = req.user;
     try {
         await Job.create({ ...req.body, createdBy });
-        res.status(StatusCodes.CREATED).redirect("/jobs");
+        res.status(StatusCodes.MOVED_TEMPORARILY).redirect("/jobs");
     } catch (error) {
         if (error.constructor.name === "ValidationError") {
             parseValidationErrors(error, req);
@@ -51,7 +51,7 @@ const updateJob = async (req, res) => {
             { ...req.body },
             { new: true }
         );
-        res.status(StatusCodes.OK).redirect("/jobs");
+        res.status(StatusCodes.MOVED_TEMPORARILY).redirect("/jobs");
     } catch (error) {
         if (error.constructor.name === "ValidationError") {
             parseValidationErrors(error, req);
@@ -68,7 +68,7 @@ const deleteJob = async (req, res, next) => {
     const { id: jobId } = req.params;
     try {
         await Job.findByIdAndDelete({ _id: jobId });
-        res.status(StatusCodes.OK).redirect("/jobs");
+        res.status(StatusCodes.MOVED_TEMPORARILY).redirect("/jobs");
     } catch (error) {
         next(error);
     }

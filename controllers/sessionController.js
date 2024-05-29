@@ -17,7 +17,7 @@ const registerDo = async (req, res, next) => {
 
     try {
         await User.create(req.body);
-        return res.status(StatusCodes.CREATED).redirect("/");
+        return res.status(StatusCodes.MOVED_TEMPORARILY).redirect("/");
     } catch (e) {
         if (e.constructor.name === "ValidationError") {
             parseValidationErrors(e, req);
@@ -40,7 +40,7 @@ const logoff = (req, res) => {
         if (err) {
             console.log(err);
         }
-        res.status(StatusCodes.SEE_OTHER).redirect("/");
+        res.status(StatusCodes.MOVED_TEMPORARILY).redirect("/");
     });
 };
 
@@ -48,7 +48,7 @@ const logonShow = (req, res) => {
     if (req.user) {
         return res.redirect("/");
     }
-    res.status(StatusCodes.OK).render("logon");
+    res.render("logon");
 };
 
 module.exports = {
