@@ -46,9 +46,9 @@ const logoff = (req, res) => {
 
 const logonShow = (req, res) => {
     if (req.user) {
-        return res.redirect("/");
+        return res.status(StatusCodes.MOVED_TEMPORARILY).redirect("/");
     }
-    res.render("logon");
+    res.status(StatusCodes.OK).render("logon");
 };
 
 module.exports = {

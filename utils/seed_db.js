@@ -27,7 +27,7 @@ const seed_db = async () => {
         await Job.deleteMany({}); // deletes all job records
         await User.deleteMany({}); // and all the users
         testUser = await factory.create("user", { password: testUserPassword });
-        await factory.createMany("job", 20, { createdBy: testUser._id }); // put 30 job entries in the database.
+        await factory.createMany("job", 20, { createdBy: testUser._id }); // put 20 job entries in the database.
     } catch (e) {
         console.log("database error");
         console.log(e.message);
