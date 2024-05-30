@@ -5,12 +5,12 @@ const { app, server } = require("../app");
 
 const expect = chai.expect;
 
-const { factory, seed_db } = require("../utils/seed_db");
+const { factory } = require("../utils/seed_db");
 const faker = require("@faker-js/faker").fakerEN_US;
 
 const User = require("../models/User");
 
-describe("tests for registration and logon", function () {
+describe("tests for registration, logon and logoff", function () {
     this.timeout(100000);
     after(() => {
         server.close();

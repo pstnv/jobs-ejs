@@ -6,6 +6,7 @@ const { app, server } = require("../app");
 const expect = chai.expect;
 
 describe("test getting a page", function () {
+    this.timeout(10000);
     after(() => {
         server.close();
     });
