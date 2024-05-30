@@ -101,7 +101,8 @@ describe("tests for registration and logon", function () {
             expect.fail("Logon request failed");
         }
     });
-    it("should get the index page", (done) => {
+
+    it("should get the index page with user name", (done) => {
         chai.request(app)
             .get("/")
             .set("Cookie", this.sessionCookie)
@@ -111,6 +112,42 @@ describe("tests for registration and logon", function () {
                 expect(res).to.have.status(200);
                 expect(res).to.have.property("text");
                 expect(res.text).to.include(this.user.name);
+                done();
+            });
+    });
+
+    it("should log the user off", (done) => {
+        const dataToPost = {
+            _csrf: this.csrfToken,
+        };
+        chai.request(app)
+            .post("/session/logoff")
+            .set("Cookie", this.csrfCookie + ";" + this.sessionCookie)
+            .set("content-type", "application/x-www-form-urlencoded")
+            .redirects(0)
+            .send(dataToPost)
+            .end((err, res) => {
+                expect(err).to.equal(null);
+                // expecting redirecting
+                expect(res).to.have.status(302);
+                expect(res.headers.location).to.equal("/");
+                // expecting no cookies (undefined)
+                const sessionCookie = res.headers["set-cookie"];
+                expect(sessionCookie).to.be.undefined;
+                done();
+            });
+    });
+
+    it("should get the index page without user name after user logged off", (done) => {
+        chai.request(app)
+            .get("/")
+            .set("Cookie", this.sessionCookie)
+            .send()
+            .end((err, res) => {
+                expect(err).to.equal(null);
+                expect(res).to.have.status(200);
+                expect(res).to.have.property("text");
+                expect(res.text).not.to.include(this.user.name);
                 done();
             });
     });
