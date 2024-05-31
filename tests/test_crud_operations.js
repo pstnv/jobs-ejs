@@ -6,7 +6,6 @@ const { app, server } = require("../app");
 const expect = chai.expect;
 
 const { factory, seed_db, testUserPassword } = require("../utils/seed_db");
-const faker = require("@faker-js/faker").fakerEN_US;
 
 const Job = require("../models/Job");
 

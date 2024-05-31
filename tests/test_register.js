@@ -65,7 +65,7 @@ describe("tests for registration, logon and logoff", function () {
             res = await request;
             expect(res).to.have.status(200);
             expect(res).to.have.property("text");
-            expect(res.text).to.include("Jobs List");
+            expect(res.text).to.include("Click this link to logon");
             newUser = await User.findOne({ email: this.user.email });
             expect(newUser).to.not.be.null;
         } catch (err) {
