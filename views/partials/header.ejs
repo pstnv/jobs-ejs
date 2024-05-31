@@ -3,6 +3,7 @@
 <% if (user) { %>
     <p>User <%= user.name %> is logged on.</p>
     <form method="POST" action="/sessions/logoff">
+    <input type="hidden" name="_csrf" value="<%= _csrf %>">
     <button>Logoff</button>
     </form>
 <% } %>
@@ -13,7 +14,8 @@
         Error: <%= err %>
         </div>
     <% })
-    } %>
+    } 
+%>
 
 <% if (info) {
     info.forEach((msg) => { %>
@@ -21,5 +23,6 @@
         Info: <%= msg %>
         </div>
     <% })
-    } %>
+    } 
+%>
 <hr />

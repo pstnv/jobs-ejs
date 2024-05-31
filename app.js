@@ -8,6 +8,14 @@ const app = express();
 // middleware
 app.set("view engine", "ejs");
 app.use(require("body-parser").urlencoded({ extended: true }));
+app.use(express.json());
+// cookies
+const cookieParser = require("cookie-parser");
+app.use(cookieParser(process.env.SESSION_SECRET));
+// extra security packages
+const rateLimiter = require("express-rate-limit");
+const helmet = require("helmet");
+const xss = require("xss-clean");
 
 const session = require("express-session");
 const MongoDBStore = require("connect-mongodb-session")(session);
@@ -30,9 +38,14 @@ const sessionParms = {
     cookie: { secure: false, sameSite: "strict" },
 };
 
+// csrf
+const csrf = require("host-csrf");
+let csrf_development_mode = true;
+
 if (app.get("env") === "production") {
     app.set("trust proxy", 1); // trust first proxy
     sessionParms.cookie.secure = true; // serve secure cookies
+    csrf_development_mode = false;
 }
 
 app.use(session(sessionParms));
@@ -44,6 +57,27 @@ const passportInit = require("./passport/passportInit");
 passportInit();
 app.use(passport.initialize());
 app.use(passport.session());
+
+// csrf
+const csrf_options = {
+    protected_operations: ["POST"],
+    protected_content_types: ["application/json"],
+    development_mode: csrf_development_mode,
+    //
+    cookieName: "csrf_cookie",
+};
+const csrf_middleware = csrf(csrf_options); //initialize and return middlware
+app.use(csrf_middleware);
+
+// security
+app.use(
+    rateLimiter({
+        windowMs: 15 * 60 * 1000, // 15 minutes
+        max: 100, // limit each IP to 100 requests per windowMs
+    })
+);
+app.use(helmet());
+app.use(xss());
 
 // flash messages
 app.use(require("connect-flash")());
@@ -57,14 +91,17 @@ app.use("/sessions", require("./routes/sessionRoutes"));
 const secretWordRouter = require("./routes/secretWord");
 // authentication middleware
 const auth = require("./middleware/auth");
+// jobs route
+const jobs = require("./routes/jobs.js");
 app.use("/secretWord", auth, secretWordRouter);
+app.use("/jobs", auth, jobs);
 
 app.use((req, res) => {
     res.status(404).send(`That page ${req.url} was not found.`);
 });
 app.use((err, req, res, next) => {
-    res.status(500).send(err.message);
     console.log(err);
+    res.status(500).send("Something went wrong. Try again later...");
 });
 
 const port = process.env.PORT || 5000;
