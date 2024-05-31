@@ -1,8 +1,12 @@
+const { expect } = require("chai");
+
 const puppeteer = require("puppeteer");
 
 const { app, server } = require("../app");
 
 const { factory, seed_db, testUserPassword } = require("../utils/seed_db");
+const Job = require("../models/Job");
+const { create } = require("../models/User");
 const faker = require("@faker-js/faker").fakerEN_US;
 
 describe("Functional Tests with Puppeteer", function () {
@@ -14,7 +18,7 @@ describe("Functional Tests with Puppeteer", function () {
     before(async function () {
         this.timeout(10000);
         // Launch the browser and open a new blank page
-        // add {headless: false, slowMo: 100} to brackets to watch how puppeteer works
+        // add {headless: false, slowMo: 30} to brackets to watch how puppeteer works
         browser = await puppeteer.launch();
         page = await browser.newPage();
         // Navigate the page to a URL
@@ -96,7 +100,7 @@ describe("Functional Tests with Puppeteer", function () {
     });
 
     // after register we are redirected to the index page
-    describe("should get the index page", function () {
+    describe("should open the index page", function () {
         this.timeout(10000);
         it("should have register and logon link", async () => {
             // register link
@@ -187,8 +191,75 @@ describe("Functional Tests with Puppeteer", function () {
             // Jobs List
             await page.waitForSelector("h2 ::-p-text(Jobs List)");
             // a button with text 'Add A Job'
-            await page.waitForSelector('a[href="/jobs/new"]');
-            // await page.waitForSelector("button::-p-text(Add A Job)");
+            this.btnAddJob = await page.waitForSelector(
+                "button::-p-text(Add A Job)"
+            );
+        });
+        it("should have 20 entries in the jobs list", async () => {
+            // verify that 20 entries returned -
+            // check how many times <tr> appears on the page
+            // should return 21 (with table header)
+            const pageContent = await page.content();
+            const tableRowsCount = pageContent.split("<tr>").length;
+            expect(tableRowsCount).to.equal(21);
+        });
+        it("should open the page with add a job form", async () => {
+            await this.btnAddJob.click();
+            await page.waitForNavigation();
+            // form
+            await page.waitForSelector("h2::-p-text(Adding a Job Listing)");
+        });
+    });
+
+    // testing Add a job page
+    describe("testing add a job page", function () {
+        this.timeout(30000);
+        it("should have add a job form with various elements", async () => {
+            // form
+            this.companyField = await page.waitForSelector(
+                'input[name="company"]'
+            );
+            this.positionField = await page.waitForSelector(
+                'input[name="position"]'
+            );
+            this.statusField = await page.waitForSelector(
+                'select[name="status"]'
+            );
+            // get selected value from status select (should be "pending" by default)
+            const defaultStatus = await (
+                await this.statusField.getProperty("value")
+            ).jsonValue();
+            expect(defaultStatus).to.equal("pending");
+            this.btnAdd = await page.waitForSelector("button::-p-text(add)");
+            await page.waitForSelector("button::-p-text(cancel)");
+        });
+        it("should create a job entry", async () => {
+            // create new job entry
+            this.job = await factory.build("job");
+            // fill create job form
+            await this.companyField.type(this.job.company);
+            await this.positionField.type(this.job.position);
+            await this.statusField.select(this.job.status);
+            await this.btnAdd.click();
+
+            // expect redirects to Jobs List page
+            await page.waitForNavigation();
+            await page.waitForSelector("h2 ::-p-text(Jobs List)");
+            // verify that the message says that the job listing has been added
+            await page.waitForSelector(
+                "div ::-p-text(Info: The job  was created)"
+            );
+            // check the database to see that the latest jobs entry has the data entered
+            const newJob = await Job.findOne(
+                {
+                    company: this.job.company,
+                    position: this.job.position,
+                    status: this.job.status,
+                },
+                {},
+                { sort: { createdAt: -1 } }
+            );
+            expect(newJob).to.not.be.null;
         });
     });
 });
