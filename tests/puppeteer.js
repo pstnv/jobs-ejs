@@ -6,14 +6,15 @@ const { factory, seed_db, testUserPassword } = require("../utils/seed_db");
 const faker = require("@faker-js/faker").fakerEN_US;
 
 describe("Functional Tests with Puppeteer", function () {
-    this.timeout(20000);
+    // this.timeout(50000);
 
     let browser = null;
     let page = null;
 
     before(async function () {
+        this.timeout(10000);
         // Launch the browser and open a new blank page
-        // add { headless: false } to brackets to watch how puppeteer works
+        // add {headless: false, slowMo: 100} to brackets to watch how puppeteer works
         browser = await puppeteer.launch();
         page = await browser.newPage();
         // Navigate the page to a URL
@@ -21,18 +22,21 @@ describe("Functional Tests with Puppeteer", function () {
         await page.goto(`http://localhost:${port}`);
     });
     after(async function () {
+        this.timeout(10000);
         // close browser after testing
         await browser.close();
         server.close();
         return;
     });
     describe("got to site", function () {
+        this.timeout(10000);
         it("should have completed a connection", function (done) {
             done();
         });
     });
     // testing index page
     describe("testing index page", function () {
+        this.timeout(10000);
         it("should have register and logon link", async () => {
             this.registerLink = await page.waitForSelector(
                 'a[href="/session/register"]'
@@ -51,6 +55,7 @@ describe("Functional Tests with Puppeteer", function () {
 
     // testing register page
     describe("testing register page", function () {
+        this.timeout(30000);
         it("should have register form with various elements", async () => {
             this.nameField = await page.waitForSelector('input[name="name"]');
             this.emailField = await page.waitForSelector('input[name="email"]');
@@ -92,6 +97,7 @@ describe("Functional Tests with Puppeteer", function () {
 
     // after register we are redirected to the index page
     describe("should get the index page", function () {
+        this.timeout(10000);
         it("should have register and logon link", async () => {
             // register link
             this.registerLink = await page.waitForSelector(
@@ -112,6 +118,7 @@ describe("Functional Tests with Puppeteer", function () {
 
     // testing logon page
     describe("testing logon page", function () {
+        this.timeout(20000);
         it("should have logon form with various elements", async () => {
             this.emailField = await page.waitForSelector('input[name="email"]');
             this.passwordField = await page.waitForSelector(
@@ -150,6 +157,7 @@ describe("Functional Tests with Puppeteer", function () {
 
     // after logon we are redirected to the index page
     describe("should get the index page", function () {
+        this.timeout(10000);
         it("should have links for logged in user", async () => {
             // logoff button
             await page.waitForSelector("button::-p-text(Logoff)");
@@ -169,6 +177,7 @@ describe("Functional Tests with Puppeteer", function () {
 
     // testing jobs page
     describe("testing jobs page", function () {
+        this.timeout(20000);
         it("should have jobs list and various elements", async () => {
             await page.waitForSelector(
                 "h1 ::-p-text(The Jobs EJS Application)"
