@@ -8,7 +8,7 @@ const expect = chai.expect;
 const { factory, seed_db, testUserPassword } = require("../utils/seed_db");
 const faker = require("@faker-js/faker").fakerEN_US;
 
-const User = require("../models/User");
+const Job = require("../models/Job");
 
 describe("tests for Job CRUD Operations", function () {
     this.timeout(100000);
@@ -66,8 +66,6 @@ describe("tests for Job CRUD Operations", function () {
                 .send(dataToPost);
             res = await request;
             expect(res).to.have.status(302);
-            console.log(res.status);
-            console.log(res.headers.location);
             expect(res.headers.location).to.equal("/");
             const cookies = res.headers["set-cookie"];
             this.sessionCookie = cookies.find((element) =>
@@ -97,5 +95,44 @@ describe("tests for Job CRUD Operations", function () {
                 expect(pageParts.length).to.equal(21);
                 done();
             });
+    });
+
+    it("should create job entry", async () => {
+        // create new job entry
+        const testJob = await factory.build("job");
+
+        const dataToPost = {
+            company: testJob.company,
+            position: testJob.position,
+            status: testJob.status,
+            _csrf: this.csrfToken,
+        };
+
+        try {
+            const request = chai
+                .request(app)
+                .post("/jobs")
+                .set("Cookie", this.csrfCookie + ";" + this.sessionCookie)
+                .set("content-type", "application/x-www-form-urlencoded")
+                .send(dataToPost);
+            res = await request;
+
+            // expect page redirects to display all jobs
+            expect(res).to.have.status(200);
+            expect(res).to.have.property("text");
+            expect(res.text).to.include("Jobs List");
+
+            // check weather new job document can be found in MongoDB
+            newJob = await Job.findOne({
+                company: dataToPost.company,
+                position: dataToPost.position,
+                status: dataToPost.status,
+                createdBy: this.user._id,
+            });
+            expect(newJob).to.not.be.null;
+        } catch (err) {
+            console.log(err);
+            expect.fail("Create job request failed");
+        }
     });
 });

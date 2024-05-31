@@ -128,10 +128,9 @@ app.use((req, res) => {
 });
 app.use((err, req, res, next) => {
     console.log(err);
-    res.status(500).send(err.message);
-    // res.status(StatusCodes.INTERNAL_SERVER_ERROR).send(
-    //     "Something went wrong. Try again later..."
-    // );
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).send(
+        "Something went wrong. Try again later..."
+    );
 });
 
 const port = process.env.PORT || 3000;

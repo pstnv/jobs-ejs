@@ -12,7 +12,7 @@ const getAllJobs = async (req, res) => {
     }
 };
 
-const createJob = async (req, res) => {
+const createJob = async (req, res, next) => {
     const { _id: createdBy } = req.user;
     try {
         await Job.create({ ...req.body, createdBy });
@@ -29,7 +29,7 @@ const createJob = async (req, res) => {
     }
 };
 
-const displayJobForm = async (req, res) => {
+const displayJobForm = async (req, res, next) => {
     res.status(StatusCodes.OK).render("job", { job: null });
 };
 
@@ -43,7 +43,7 @@ const editJob = async (req, res) => {
     }
 };
 
-const updateJob = async (req, res) => {
+const updateJob = async (req, res, next) => {
     const { id: jobId } = req.params;
     try {
         await Job.findOneAndUpdate(
