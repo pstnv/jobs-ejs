@@ -16,6 +16,7 @@ const createJob = async (req, res, next) => {
     const { _id: createdBy } = req.user;
     try {
         await Job.create({ ...req.body, createdBy });
+        req.flash("info", "The job  was created.");
         res.status(StatusCodes.MOVED_TEMPORARILY).redirect("/jobs");
     } catch (error) {
         if (error.constructor.name === "ValidationError") {
@@ -51,6 +52,7 @@ const updateJob = async (req, res, next) => {
             { ...req.body },
             { new: true }
         );
+        req.flash("info", "The job  was updated.");
         res.status(StatusCodes.MOVED_TEMPORARILY).redirect("/jobs");
     } catch (error) {
         if (error.constructor.name === "ValidationError") {
@@ -68,6 +70,7 @@ const deleteJob = async (req, res, next) => {
     const { id: jobId } = req.params;
     try {
         await Job.findByIdAndDelete({ _id: jobId });
+        req.flash("info", "The job  was deleted.");
         res.status(StatusCodes.MOVED_TEMPORARILY).redirect("/jobs");
     } catch (error) {
         next(error);
