@@ -13,7 +13,7 @@
         </div>
         <div>
             <label for="status">status:</label>
-            <select id="status" name="status" defa>
+            <select id="status" name="status">
                 <option value="pending"  <%= job && job?.status ==='pending' ? 'selected' : job ? '' : 'selected' %>>pending</option>
                 <option value="interview" <%=job?.status==='interview' ? 'selected' : '' %>>interview</option>
                 <option value="declined" <%=job?.status==='declined' ? 'selected' : '' %>>declined</option>

@@ -6,17 +6,18 @@ const getAllJobs = async (req, res) => {
     const { _id: userId } = req.user;
     try {
         const jobs = await Job.find({ createdBy: userId });
-        res.render("jobs", { jobs });
+        res.status(StatusCodes.OK).render("jobs", { jobs });
     } catch (error) {
         throw new Error(error);
     }
 };
 
-const createJob = async (req, res) => {
+const createJob = async (req, res, next) => {
     const { _id: createdBy } = req.user;
     try {
         await Job.create({ ...req.body, createdBy });
-        res.redirect("/jobs");
+        req.flash("info", "The job  was created.");
+        res.status(StatusCodes.MOVED_TEMPORARILY).redirect("/jobs");
     } catch (error) {
         if (error.constructor.name === "ValidationError") {
             parseValidationErrors(error, req);
@@ -29,21 +30,21 @@ const createJob = async (req, res) => {
     }
 };
 
-const displayJobForm = async (req, res) => {
-    res.render("job", { job: null });
+const displayJobForm = async (req, res, next) => {
+    res.status(StatusCodes.OK).render("job", { job: null });
 };
 
 const editJob = async (req, res) => {
     const { id: jobId } = req.params;
     try {
         const job = await Job.findOne({ _id: jobId });
-        res.render("job", { job });
+        res.status(StatusCodes.OK).render("job", { job });
     } catch (error) {
         next(error);
     }
 };
 
-const updateJob = async (req, res) => {
+const updateJob = async (req, res, next) => {
     const { id: jobId } = req.params;
     try {
         await Job.findOneAndUpdate(
@@ -51,7 +52,8 @@ const updateJob = async (req, res) => {
             { ...req.body },
             { new: true }
         );
-        res.redirect("/jobs");
+        req.flash("info", "The job  was updated.");
+        res.status(StatusCodes.MOVED_TEMPORARILY).redirect("/jobs");
     } catch (error) {
         if (error.constructor.name === "ValidationError") {
             parseValidationErrors(error, req);
@@ -68,7 +70,8 @@ const deleteJob = async (req, res, next) => {
     const { id: jobId } = req.params;
     try {
         await Job.findByIdAndDelete({ _id: jobId });
-        res.redirect("/jobs");
+        req.flash("info", "The job  was deleted.");
+        res.status(StatusCodes.MOVED_TEMPORARILY).redirect("/jobs");
     } catch (error) {
         next(error);
     }
